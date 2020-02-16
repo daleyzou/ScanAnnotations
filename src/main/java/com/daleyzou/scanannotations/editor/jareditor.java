@@ -7,6 +7,7 @@ import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.NotFoundException;
 import javassist.bytecode.*;
+import javassist.bytecode.annotation.Annotation;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.assertj.core.util.Lists;
 
@@ -59,40 +60,39 @@ public class jareditor {
     public void createTest(JarFile jarFile, JarEntry jarEntry) throws IOException {
         if (!jarEntry.getName().endsWith(".class"))
             return;
+        if (!jarEntry.getName().startsWith("BOOT-INF/classes")){
+            return;
+        }
 
         InputStream inputStream = jarFile.getInputStream(jarEntry);
         DataInputStream dis = new DataInputStream(new BufferedInputStream(inputStream));
-        if (jarEntry.getName().equals("BOOT-INF/classes/com/gaosiedu/middleware/mwgrayscaledubbo/controller/AccessController.class")){
-            System.out.println("begin error !!!!");
-//            ClassFile clsss = new ClassFile(dis);
-        }
+
         ClassFile cls = new ClassFile(dis);
-        System.out.println("fileName: " + jarEntry.getName());
-//        if (jarEntry.getName().equals("BOOT-INF/classes/com/gaosiedu/middleware/mwgrayscaledubbo/base/util/RestTemplateUtil.class")){
-//            System.out.println("begin");
-//        }
-        //获取方法
-        List<MethodInfo> methods = cls.getMethods();
 
         //获取属性
         List<javassist.bytecode.FieldInfo> fields = cls.getFields();
 
+        System.out.println("-------------------------------------------------------------");
+        System.out.println("类的名称：" + cls.getName());
         //获取类的Runtime注解
         AnnotationsAttribute attribute = (AnnotationsAttribute) cls.getAttribute(AnnotationsAttribute.visibleTag);
+        if (attribute != null){
+            Annotation[] annotations = attribute.getAnnotations();
+            for (Annotation annotation : annotations){
+                System.out.println("类的注解名称： " + annotation.getTypeName());
+            }
+        }
+
         for (FieldInfo field : fields) {
             //获取属性的Runtime注解
             AnnotationsAttribute attribute1 = (AnnotationsAttribute) field.getAttribute(AnnotationsAttribute.visibleTag);
-            //获取属性的Class注解
-            AnnotationsAttribute attribute2 = (AnnotationsAttribute) field.getAttribute(AnnotationsAttribute.invisibleTag);
-        }
-        for (MethodInfo method : methods) {
-            //获取方法的Runtime注解
-            AnnotationsAttribute attribute1 = (AnnotationsAttribute) method.getAttribute(AnnotationsAttribute.visibleTag);
-
-            //获取方法参数的注解
-            List<ParameterAnnotationsAttribute> parameterAnnotationsAttributes = Lists
-                    .newArrayList((ParameterAnnotationsAttribute) method.getAttribute(ParameterAnnotationsAttribute.visibleTag),
-                            (ParameterAnnotationsAttribute) method.getAttribute(ParameterAnnotationsAttribute.invisibleTag));
+            if (attribute1 != null) {
+                Annotation[] annotations = attribute1.getAnnotations();
+                for (Annotation annotation : annotations){
+                    System.out.println("属性的名称：" + field.getDescriptor());
+                    System.out.println("属性的注解： " + annotation.getTypeName());
+                }
+            }
         }
     }
 
@@ -128,7 +128,6 @@ public class jareditor {
             String className = je.getName().substring(0, je.getName().length() - 6);
             className = className.replace('/', '.');
             resultList.add(className);
-            System.out.println(je.getName());
         }
     }
 
