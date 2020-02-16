@@ -36,7 +36,7 @@ public class DemoTest {
         ClassPath classPath = classPool
                 .insertClassPath("D:\\IDEAProjects\\work\\gaosiedu\\mw-grayscale-dubbo\\target\\mw-grayscale-dubbo-1.0.1-SNAPSHOT.jar");
 //        Object o = ((ArrayList) (classPath.jarfileEntries).get(198);
-        System.out.println(classPath.toString());
+//        System.out.println(classPath.toString());
         //        DataInputStream dis = new DataInputStream(new BufferedInputStream(inputStream));
         //        ClassFile cls = new ClassFile(dis);
 

@@ -96,6 +96,15 @@ public class jareditor {
         }
     }
 
+    public void testScan(JarFile jarFile, JarEntry jarEntry) throws IOException {
+        if (!jarEntry.getName().endsWith(".class"))
+            return;
+
+        InputStream inputStream = jarFile.getInputStream(jarEntry);
+        DataInputStream dis = new DataInputStream(new BufferedInputStream(inputStream));
+
+    }
+
     public void test() throws IOException {
         String pathToJar = "D:\\mw-grayscale-dubbo-1.0.1-SNAPSHOT.jar";
         JarFile jarFile = new JarFile(pathToJar);
