@@ -1,5 +1,6 @@
 package com.daleyzou.scanannotations.service;
 
+import com.daleyzou.scanannotations.utils.FileSearchUtils;
 import com.daleyzou.scanannotations.utils.StringUtils;
 import javassist.bytecode.AnnotationsAttribute;
 import javassist.bytecode.ClassFile;
@@ -38,7 +39,10 @@ public class ScanAnnotationService {
             return;
         }
 
-        InputStream inputStream = jarFile.getInputStream(jarEntry);
+        scanAnnocation(jarFile.getInputStream(jarEntry));
+    }
+
+    private void scanAnnocation(InputStream inputStream) throws IOException {
         DataInputStream dis = new DataInputStream(new BufferedInputStream(inputStream));
 
         ClassFile cls = new ClassFile(dis);
@@ -85,7 +89,7 @@ public class ScanAnnotationService {
         while (e.hasMoreElements()) {
             JarEntry je = e.nextElement();
             if (je.getName().endsWith(".xml") && je.getName().contains("classes")){
-                scanXmlFile(reader, jarFile, je);
+                scanXmlFile(reader, jarFile.getInputStream(je));
             }
             if (1 == 1){
                 continue;
@@ -105,9 +109,9 @@ public class ScanAnnotationService {
         resultList.stream().forEach(System.out::println);
     }
 
-    private void scanXmlFile(SAXReader reader, JarFile jarFile, JarEntry jarEntry) throws IOException, DocumentException {
+    private void scanXmlFile(SAXReader reader, InputStream inputStream) throws IOException, DocumentException {
 
-        Document document = reader.read(jarFile.getInputStream(jarEntry));
+        Document document = reader.read(inputStream);
         // 获取根元素
         Element root = document.getRootElement();
         for (Iterator i = root.elementIterator(); i.hasNext();) {
@@ -129,11 +133,35 @@ public class ScanAnnotationService {
         reference.forEach(ref ->{
             System.out.println(ref.attribute("interface").getValue());
         });
+    }
+
+    public void scanDir() throws IOException, DocumentException {
+        String path = "D:\\IDEAProjects\\work\\gaosiedu\\Azeroth\\target\\classes";
+        List<File> xmlFiles = FileSearchUtils.searchByFileDuff(new File(path), "xml");
+        List<File> classFiles = FileSearchUtils.searchByFileDuff(new File(path), "class");
+        long classBegin = System.currentTimeMillis();
+        for (File file : classFiles){
+            scanAnnocation(new FileInputStream(file));
+        }
+        long classEnd = System.currentTimeMillis();
+        System.out.println(classFiles.size());
+        System.out.println("扫描注解耗时：" + String.valueOf(classEnd - classBegin));
+        SAXReader saxReader = new SAXReader();
+        for (File file : xmlFiles){
+            scanXmlFile(saxReader, new FileInputStream(file));
+        }
+        System.out.println(xmlFiles.size());
+        System.out.println("扫描注解耗时：" + String.valueOf(System.currentTimeMillis() - classBegin));
         System.out.println("pause");
+
     }
 
     public static void main(String[] args) throws IOException, DocumentException {
+        long begin = System.currentTimeMillis();
         ScanAnnotationService scanAnnotationService = new ScanAnnotationService();
-        scanAnnotationService.scanJar();
+//        scanAnnotationService.scanJar();
+        scanAnnotationService.scanDir();
+        long timeUsed = System.currentTimeMillis() - begin;
+        System.out.println("扫描耗时： " + String.valueOf(timeUsed));
     }
 }
