@@ -10,7 +10,6 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.utils.IOUtils;
-import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -188,14 +187,16 @@ public class ScanAnnotationService {
     public void scanTarGz() throws IOException, DocumentException {
         // Azeroth-assembly.tar.gz
         // D:\Azeroth-assembly
+        // tar.gz 文件路径
         String sourcePath = "D:\\Azeroth-assembly.tar.gz";
+        // 要解压到的目录
         String extractPath = "D:\\test\\Azeroth";
         File sourceFile = new File(sourcePath);
-        InputStream sourceIn = new FileInputStream(sourceFile);
-        // decompressing *.tar.gz files
+        // decompressing *.tar.gz files to tar
         TarArchiveInputStream fin = new TarArchiveInputStream(new GzipCompressorInputStream(new FileInputStream(sourceFile)));
         File extraceFolder = new File(extractPath);
         TarArchiveEntry entry;
+        // 将 tar 文件解压到 extractPath 目录下
         while ((entry = fin.getNextTarEntry()) != null) {
             if (entry.isDirectory()) {
                 continue;
@@ -205,6 +206,7 @@ public class ScanAnnotationService {
             if (!parent.exists()) {
                 parent.mkdirs();
             }
+            // 将文件写出到解压的目录
             IOUtils.copy(fin, new FileOutputStream(curfile));
         }
 
