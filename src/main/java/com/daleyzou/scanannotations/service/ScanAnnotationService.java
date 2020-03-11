@@ -40,6 +40,13 @@ import java.util.jar.JarFile;
 @Service
 public class ScanAnnotationService {
 
+    /**
+     *
+     *  设置让 dom4j 不检查 xml 的 dtd，避免网络开销
+     *
+     * @return
+     * @author daleyzou
+     */
     public class IgnoreDTDEntityResolver implements EntityResolver {
 
         @Override
@@ -60,15 +67,18 @@ public class ScanAnnotationService {
     }
 
     public void scanJarEntry(JarFile jarFile, JarEntry jarEntry) throws IOException {
-        if (!jarEntry.getName().endsWith(".class"))
+        if (!jarEntry.getName().endsWith(".class")){
             return;
-        if (!StringUtils.containsAny(jarEntry.getName(),"gaosi", "gaosiedu", "aixuexi", "axx")){
+        }
+        // 只扫描包名中包含指定字符的类，避免扫描所有类浪费时间
+        if (!StringUtils.containsAny(jarEntry.getName(),"daley", "zou")){
             return;
         }
 
         scanAnnocation(jarFile.getInputStream(jarEntry));
     }
 
+    // 扫描所有的注解
     private void scanAnnocation(InputStream inputStream) throws IOException {
         DataInputStream dis = new DataInputStream(new BufferedInputStream(inputStream));
 
@@ -102,8 +112,6 @@ public class ScanAnnotationService {
     }
 
     public void scanJar(File file) throws IOException, DocumentException {
-//        String pathToJar = "D:\\mw-grayscale-dubbo-1.0.1-SNAPSHOT.jar";
-//        String pathToJar = "D:\\initialD.war";
         JarFile jarFile = new JarFile(file);
 
         List<String> resultList = new ArrayList<>();
@@ -138,8 +146,6 @@ public class ScanAnnotationService {
             className = className.replace('/', '.');
             resultList.add(className);
         }
-//        System.out.println("扫出来的类结果如下：");
-//        resultList.stream().forEach(System.out::println);
     }
 
     private void scanXmlFile(SAXReader reader, InputStream inputStream) throws IOException, DocumentException {
@@ -165,7 +171,8 @@ public class ScanAnnotationService {
     }
 
     public void scanDir() throws IOException, DocumentException {
-        String path = "D:\\IDEAProjects\\work\\gaosiedu\\Azeroth\\target\\classes";
+        // 指定要扫描目录
+        String path = "D:\\IDEAProjects\\daleyzou\\target\\classes";
         List<File> xmlFiles = FileSearchUtils.searchByFileDuff(new File(path), "xml");
         List<File> classFiles = FileSearchUtils.searchByFileDuff(new File(path), "class");
         long classBegin = System.currentTimeMillis();
@@ -174,7 +181,6 @@ public class ScanAnnotationService {
         }
         long classEnd = System.currentTimeMillis();
         System.out.println("扫描注解耗时：" + String.valueOf(classEnd - classBegin));
-        SAXReader saxReader = new SAXReader();
         for (File file : xmlFiles){
             scanXmlFile(getReader(), new FileInputStream(file));
         }
@@ -185,12 +191,10 @@ public class ScanAnnotationService {
     }
 
     public void scanTarGz() throws IOException, DocumentException {
-        // Azeroth-assembly.tar.gz
-        // D:\Azeroth-assembly
         // tar.gz 文件路径
-        String sourcePath = "D:\\Azeroth-assembly.tar.gz";
+        String sourcePath = "D:\\DaleyZou.tar.gz";
         // 要解压到的目录
-        String extractPath = "D:\\test\\Azeroth";
+        String extractPath = "D:\\test\\daleyzou";
         File sourceFile = new File(sourcePath);
         // decompressing *.tar.gz files to tar
         TarArchiveInputStream fin = new TarArchiveInputStream(new GzipCompressorInputStream(new FileInputStream(sourceFile)));
@@ -214,7 +218,6 @@ public class ScanAnnotationService {
         for (File fileItem : jarFiles) {
             scanJar(fileItem);
         }
-        SAXReader saxReader = new SAXReader();
         List<File> xmlFiles = FileSearchUtils.searchByFileDuff(extraceFolder, "xml");
         for (File xmlFile : xmlFiles) {
             scanXmlFile(getReader(), new FileInputStream(xmlFile));
@@ -224,8 +227,14 @@ public class ScanAnnotationService {
     public static void main(String[] args) throws IOException, DocumentException {
         long begin = System.currentTimeMillis();
         ScanAnnotationService scanAnnotationService = new ScanAnnotationService();
-//        scanAnnotationService.scanJar();
-//        scanAnnotationService.scanDir();
+        // todo 在这里设置你要扫描的包
+        String pathToJar = "D:\\daleyzou.war";
+        File file = new File(pathToJar);
+        // 扫描指定的 jar / war 包
+        scanAnnotationService.scanJar(file);
+        // 扫描目录
+        scanAnnotationService.scanDir();
+        // 扫描 tar.gz 文件
         scanAnnotationService.scanTarGz();
         long timeUsed = System.currentTimeMillis() - begin;
         System.out.println("扫描耗时： " + String.valueOf(timeUsed));
