@@ -44,3 +44,6 @@
 #### 代码已上传仓库
 https://github.com/daleyzou/ScanAnnotations
 
+
+ps: 这是我为了获取指定项目中的所有dubbo生产者接口、所有dubbo消费者接口而编写的demo，所以我要扫描所有的注解和 xml 文件
+
